@@ -29,6 +29,8 @@
 #define COND_TYPE_DUMMY (0) //!< Condition type dummy
 #define COND_TYPE_HYPERRECTANGLE_CSR (1) //!< Condition type CSR hyperrectangle
 #define COND_TYPE_HYPERRECTANGLE_UBR (2) //!< Condition type UBR hyperrectangle
+#define COND_TYPE_HYPERRECTANGLE_MPR (14) //!< Condition type UBR hyperrectangle
+#define COND_TYPE_HYPERRECTANGLE_MMR (15) //!< Condition type UBR hyperrectangle
 #define COND_TYPE_HYPERELLIPSOID (3) //!< Condition type hyperellipsoid
 #define COND_TYPE_NEURAL (4) //!< Condition type neural network
 #define COND_TYPE_GP (5) //!< Condition type tree GP
@@ -41,6 +43,8 @@
 #define COND_STRING_DUMMY ("dummy\0") //!< Dummy
 #define COND_STRING_HYPERRECTANGLE_CSR ("hyperrectangle_csr\0") //!< CSR
 #define COND_STRING_HYPERRECTANGLE_UBR ("hyperrectangle_ubr\0") //!< UBR
+#define COND_STRING_HYPERRECTANGLE_MPR ("hyperrectangle_mpr\0") //!< UBR
+#define COND_STRING_HYPERRECTANGLE_MMR ("hyperrectangle_mmr\0") //!< UBR
 #define COND_STRING_HYPERELLIPSOID ("hyperellipsoid\0") //!< Hyperellipsoid
 #define COND_STRING_NEURAL ("neural\0") //!< Neural
 #define COND_STRING_GP ("tree_gp\0") //!< Tree GP
@@ -51,7 +55,7 @@
 #define COND_STRING_RULE_NETWORK ("rule_network\0") //!< Rule network
 
 #define COND_TYPE_OPTIONS                                                      \
-    "dummy, hyperrectangle_csr, hyperrectangle_ubr, hyperellipsoid, neural, "  \
+    "dummy, hyperrectangle_csr, hyperrectangle_ubr, hyperrectangle_MPR, hyperrectangle_MMR, hyperellipsoid, neural, "  \
     "tree_gp, dgp, ternary, rule_dgp, rule_neural, rule_network"
 
 /**
@@ -115,6 +119,7 @@ struct CondVtbl {
                             const double *x);
     void (*cond_impl_free)(const struct XCSF *xcsf, const struct Cl *c);
     void (*cond_impl_init)(const struct XCSF *xcsf, struct Cl *c);
+    void (*cond_impl_conv_init)(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp);
     void (*cond_impl_print)(const struct XCSF *xcsf, const struct Cl *c);
     void (*cond_impl_update)(const struct XCSF *xcsf, const struct Cl *c,
                              const double *x, const double *y);
@@ -275,6 +280,17 @@ static inline void
 cond_init(const struct XCSF *xcsf, struct Cl *c)
 {
     (*c->cond_vptr->cond_impl_init)(xcsf, c);
+}
+
+/**
+ * @brief Converts an UBR condition to a new hyperrectangle condition.
+ * @param [in] xcsf The XCSF data structure.
+ * @param [in] c The classifier whose condition is to be initialised.
+ */
+static inline void
+cond_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
+{
+    (*c->cond_vptr->cond_impl_conv_init)(xcsf, c, temp);
 }
 
 /**

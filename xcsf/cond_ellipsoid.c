@@ -77,6 +77,12 @@ cond_ellipsoid_init(const struct XCSF *xcsf, struct Cl *c)
     c->cond = new;
 }
 
+void
+cond_ellipsoid_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
+{
+    return;
+}
+
 /**
  * @brief Frees the memory used by a hyperellipsoid condition.
  * @param [in] xcsf XCSF data structure.

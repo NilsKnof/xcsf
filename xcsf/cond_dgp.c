@@ -39,6 +39,12 @@ cond_dgp_init(const struct XCSF *xcsf, struct Cl *c)
     c->cond = new;
 }
 
+void
+cond_dgp_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
+{
+    return;
+}
+
 /**
  * @brief Frees the memory used by a dynamical GP graph condition.
  * @param [in] xcsf XCSF data structure.

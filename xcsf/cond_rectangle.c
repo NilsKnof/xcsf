@@ -68,6 +68,7 @@ cond_rectangle_init(const struct XCSF *xcsf, struct Cl *c)
     struct CondRectangle *new = malloc(sizeof(struct CondRectangle));
     new->b1 = malloc(sizeof(double) * xcsf->x_dim);
     new->b2 = malloc(sizeof(double) * xcsf->x_dim);
+    double temp = 0;
     const double spread_max = fabs(xcsf->cond->max - xcsf->cond->min);
     for (int i = 0; i < xcsf->x_dim; ++i) {
         new->b1[i] = rand_uniform(xcsf->cond->min, xcsf->cond->max);
@@ -77,6 +78,55 @@ cond_rectangle_init(const struct XCSF *xcsf, struct Cl *c)
         // csr: b1 = center, b2 = spread
         for (int i = 0; i < xcsf->x_dim; ++i) {
             new->b2[i] = rand_uniform(xcsf->cond->spread_min, spread_max);
+        }
+    } else if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MMR || xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MPR) {
+        // MMR/OBR: b1 = lower, b2 = upper
+        for (int i = 0; i < xcsf->x_dim; ++i) {
+            if (new->b1[i] > new->b2[i]) {
+                temp = new->b2[i];
+                new->b2[i] = new->b1[i];
+                new->b1[i] = temp;
+            }
+            if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MPR) {
+                // MPR: b1 = lower, b2 = proportion
+                new->b2[i] = (new->b2[i] - new->b1[i]) / (xcsf->cond->max - new->b1[i]);
+            }
+        }
+    }
+    new->mu = malloc(sizeof(double) * N_MU);
+    sam_init(new->mu, N_MU, MU_TYPE);
+    c->cond = new;
+}
+
+
+/**
+ * @brief Converts an UBR condition to a new hyperrectangle condition.
+ * @param [in] xcsf XCSF data structure.
+ * @param [in] c Classifier whose condition is to be initialised.
+ * @param [in] UBR Classifier whose condition is to be converted.
+ */
+void cond_rectangle_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
+{
+    struct CondRectangle *new = malloc(sizeof(struct CondRectangle));
+    const struct CondRectangle *temp_cond = temp->cond;
+    new->b1 = malloc(sizeof(double) * xcsf->x_dim);
+    new->b2 = malloc(sizeof(double) * xcsf->x_dim);
+    double b1 = 0, b2 = 0;
+    for (int i = 0; i < xcsf->x_dim; ++i) {
+        b1 = fmin(temp_cond->b1[i], temp_cond->b2[i]);
+        b2 = fmax(temp_cond->b1[i], temp_cond->b2[i]);
+        if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_CSR) {
+            // csr: b1 = center, b2 = spread
+            new->b1[i] = b1 + ((b2 - b1) / 2);
+            new->b2[i] = (b2 - b1) / 2;
+        } else if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MMR) {
+            // MMR/OBR: b1 = lower, b2 = upper
+            new->b1[i] = b1;
+            new->b2[i] = b2;
+        } else if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MPR) {
+            // MPR: b1 = lower, b2 = proportion
+            new->b1[i] = b1;
+            new->b2[i] = (b2 - b1) / (xcsf->cond->max - b1);
         }
     }
     new->mu = malloc(sizeof(double) * N_MU);
@@ -133,17 +183,28 @@ cond_rectangle_cover(const struct XCSF *xcsf, const struct Cl *c,
 {
     const struct CondRectangle *cond = c->cond;
     const double spread_max = fabs(xcsf->cond->max - xcsf->cond->min);
+    // CSR
     if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_CSR) {
         for (int i = 0; i < xcsf->x_dim; ++i) {
             cond->b1[i] = x[i];
             cond->b2[i] = rand_uniform(xcsf->cond->spread_min, spread_max);
         }
+    // OBR, UBR & MPR
     } else {
         for (int i = 0; i < xcsf->x_dim; ++i) {
             const double r1 = rand_uniform(xcsf->cond->spread_min, spread_max);
             const double r2 = rand_uniform(xcsf->cond->spread_min, spread_max);
-            cond->b1[i] = x[i] - (r1 * 0.5);
-            cond->b2[i] = x[i] + (r2 * 0.5);
+            cond->b1[i] = (x[i] - r1 < xcsf->cond->min) ? xcsf->cond->min : x[i] - r1;
+            cond->b2[i] = (x[i] + r2 > xcsf->cond->max) ? xcsf->cond->max : x[i] + r2;
+            // random swap for UBR
+            if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_UBR && rand_uniform(0, 1) < 0.5) {
+                double temp = cond->b1[i];
+                cond->b1[i] = cond->b2[i];
+                cond->b2[i] = temp;
+            // MPR
+            } else if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MPR) {
+                cond->b2[i] = (cond->b2[i] - cond->b1[i]) / (xcsf->cond->max - cond->b1[i]);
+            }
         }
     }
 }
@@ -160,11 +221,40 @@ cond_rectangle_update(const struct XCSF *xcsf, const struct Cl *c,
                       const double *x, const double *y)
 {
     (void) y;
-    if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_CSR &&
-        xcsf->cond->eta > 0) {
-        const struct CondRectangle *cond = c->cond;
+    if (xcsf->cond->eta <= 0) return;
+    const struct CondRectangle *cond = c->cond;
+    // CSR
+    if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_CSR) {
         for (int i = 0; i < xcsf->x_dim; ++i) {
             cond->b1[i] += xcsf->cond->eta * (x[i] - cond->b1[i]);
+        }
+    } else {
+        double lb = 0, ub = 0, offset = 0;
+        for (int i = 0; i < xcsf->x_dim; ++i) {
+            // UBR
+            if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_UBR) {
+                lb = fmin(cond->b1[i], cond->b2[i]);
+                ub = fmax(cond->b1[i], cond->b2[i]);
+            // MMR
+            } else if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MMR) {
+                lb = cond->b1[i];
+                ub = cond->b2[i];
+            //MPR
+            } else {
+                lb = cond->b1[i];
+                ub = lb + (cond->b2[i] * (xcsf->cond->max - lb));
+            }
+            offset = xcsf->cond->eta * (x[i] - (lb + ((ub - lb) / 2)));
+            // MPR
+            if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MPR) {
+                ub += offset;
+                cond->b1[i] += offset;
+                cond->b2[i] = (ub - cond->b1[i]) / (xcsf->cond->max - cond->b1[i]);
+            // UBR & OBR
+            } else {
+                cond->b1[i] += offset;
+                cond->b2[i] += offset;
+            }
         }
     }
 }
@@ -181,15 +271,29 @@ cond_rectangle_match(const struct XCSF *xcsf, const struct Cl *c,
                      const double *x)
 {
     const struct CondRectangle *cond = c->cond;
+    // CSR
     if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_CSR) {
-        return (cond_rectangle_dist(xcsf, c, x) < 1);
-    } else { // ubr
-        for (int i = 0; i < xcsf->x_dim; ++i) {
-            const double lb = fmin(cond->b1[i], cond->b2[i]);
-            const double ub = fmax(cond->b1[i], cond->b2[i]);
-            if (x[i] < lb || x[i] > ub) {
-                return false;
-            }
+        return (cond_rectangle_dist(xcsf, c, x) <= 1);
+    }
+    for (int i = 0; i < xcsf->x_dim; ++i) {
+        double lb = 0, ub = 0;
+        // UBR
+        if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_UBR) {
+            lb = fmin(cond->b1[i], cond->b2[i]);
+            ub = fmax(cond->b1[i], cond->b2[i]);
+        // MMR
+        } else if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MMR) {
+            lb = cond->b1[i];
+            ub = cond->b2[i];
+        // MPR
+        } else {
+            lb = cond->b1[i];
+            ub = lb + (cond->b2[i] * (xcsf->cond->max - lb));
+        }
+        lb = (lb < xcsf->cond->min) ? xcsf->cond->min : lb;
+        ub = (ub > xcsf->cond->max) ? xcsf->cond->max : ub;
+        if (x[i] < lb || x[i] > ub) {
+            return false;
         }
     }
     return true;
@@ -242,22 +346,54 @@ cond_rectangle_mutate(const struct XCSF *xcsf, const struct Cl *c)
     double *b1 = cond->b1;
     double *b2 = cond->b2;
     sam_adapt(cond->mu, N_MU, MU_TYPE);
-    for (int i = 0; i < xcsf->x_dim; ++i) {
-        double orig = b1[i];
-        b1[i] += rand_normal(0, cond->mu[0]);
-        b1[i] = clamp(b1[i], xcsf->cond->min, xcsf->cond->max);
-        if (orig != b1[i]) {
-            changed = true;
+    // MPR
+    if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MPR) {
+        double ub;
+        for (int i = 0; i < xcsf->x_dim; ++i) {
+            ub = b1[i] + (b2[i] * (xcsf->cond->max - b1[i]));
+            double orig = b1[i];
+            b1[i] += rand_normal(0, cond->mu[0]);
+            b1[i] = clamp(b1[i], xcsf->cond->min, xcsf->cond->max);
+            if (orig != b1[i]) {
+                changed = true;
+            }
+            orig = b2[i];
+            // changing b1[i] also changes b2[i]
+            b2[i] = (ub - b1[i]) / (xcsf->cond->max - b1[i]);
+            b2[i] += rand_normal(0, cond->mu[0]);
+            b2[i] = clamp(b2[i], 0, 1);
+            if (orig != b2[i]) {
+                changed = true;
+            }
         }
-        orig = b2[i];
-        b2[i] += rand_normal(0, cond->mu[0]);
-        if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_CSR) {
-            b2[i] = fmax(DBL_EPSILON, b2[i]);
-        } else {
-            b2[i] = clamp(b2[i], xcsf->cond->min, xcsf->cond->max);
-        }
-        if (orig != b2[i]) {
-            changed = true;
+    } else {
+        for (int i = 0; i < xcsf->x_dim; ++i) {
+            double orig = b1[i];
+            b1[i] += rand_normal(0, cond->mu[0]);
+            b1[i] = clamp(b1[i], xcsf->cond->min, xcsf->cond->max);
+            if (orig != b1[i]) {
+                changed = true;
+            }
+            orig = b2[i];
+            b2[i] += rand_normal(0, cond->mu[0]);
+            // CSR
+            if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_CSR) {
+                const double spread_max = fabs(xcsf->cond->max - xcsf->cond->min);
+                // allowing maximal general intervals
+                b2[i] = clamp(b2[i], 0, spread_max);
+            // MMR & UBR
+            } else {
+                b2[i] = clamp(b2[i], xcsf->cond->min, xcsf->cond->max);
+                // keep ordering constraint
+                if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MMR && b2[i] < b1[i]) {
+                    double temp = b1[i];
+                    b1[i] = b2[i];
+                    b2[i] = temp;
+                }
+            }
+            if (orig != b2[i]) {
+                changed = true;
+            }
         }
     }
     return changed;
@@ -276,25 +412,31 @@ cond_rectangle_general(const struct XCSF *xcsf, const struct Cl *c1,
 {
     const struct CondRectangle *cond1 = c1->cond;
     const struct CondRectangle *cond2 = c2->cond;
-    if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_CSR) {
-        for (int i = 0; i < xcsf->x_dim; ++i) {
-            const double l1 = cond1->b1[i] - cond1->b2[i];
-            const double l2 = cond2->b1[i] - cond2->b2[i];
-            const double u1 = cond1->b1[i] + cond1->b2[i];
-            const double u2 = cond2->b1[i] + cond2->b2[i];
-            if (l1 > l2 || u1 < u2) {
-                return false;
-            }
+    for (int i = 0; i < xcsf->x_dim; ++i) {
+        double l1 = 0, l2 = 0, u1 = 0, u2 = 0;
+        if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_CSR) {
+            l1 = cond1->b1[i] - cond1->b2[i];
+            l2 = cond2->b1[i] - cond2->b2[i];
+            u1 = cond1->b1[i] + cond1->b2[i];
+            u2 = cond2->b1[i] + cond2->b2[i];
+        } else if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_UBR) {
+            l1 = fmin(cond1->b1[i], cond1->b2[i]);
+            l2 = fmin(cond2->b1[i], cond2->b2[i]);
+            u1 = fmax(cond1->b1[i], cond1->b2[i]);
+            u2 = fmax(cond2->b1[i], cond2->b2[i]);
+        } else if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MMR) {
+            l1 = cond1->b1[i];
+            l2 = cond2->b1[i];
+            u1 = cond1->b2[i];
+            u2 = cond2->b2[i];
+        } else { //MPR
+            l1 = cond1->b1[i];
+            l2 = cond2->b1[i];
+            u1 = l1 + (cond1->b2[i] * (xcsf->cond->max - l1));
+            u2 = l2 + (cond2->b2[i] * (xcsf->cond->max - l2));
         }
-    } else {
-        for (int i = 0; i < xcsf->x_dim; ++i) {
-            const double l1 = fmin(cond1->b1[i], cond1->b2[i]);
-            const double l2 = fmin(cond2->b1[i], cond2->b2[i]);
-            const double u1 = fmax(cond1->b1[i], cond1->b2[i]);
-            const double u2 = fmax(cond2->b1[i], cond2->b2[i]);
-            if (l1 > l2 || u1 < u2) {
-                return false;
-            }
+        if (l1 > l2 || u1 < u2) {
+            return false;
         }
     }
     return true;

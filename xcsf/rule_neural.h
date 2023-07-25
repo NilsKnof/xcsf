@@ -65,6 +65,9 @@ void
 rule_neural_cond_init(const struct XCSF *xcsf, struct Cl *c);
 
 void
+rule_neural_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp);
+
+void
 rule_neural_cond_print(const struct XCSF *xcsf, const struct Cl *c);
 
 void
@@ -91,14 +94,14 @@ rule_neural_cond_json_import(const struct XCSF *xcsf, struct Cl *c,
  * @brief Neural network rule condition implemented functions.
  */
 static struct CondVtbl const rule_neural_cond_vtbl = {
-    &rule_neural_cond_crossover,  &rule_neural_cond_general,
-    &rule_neural_cond_match,      &rule_neural_cond_mutate,
-    &rule_neural_cond_copy,       &rule_neural_cond_cover,
-    &rule_neural_cond_free,       &rule_neural_cond_init,
-    &rule_neural_cond_print,      &rule_neural_cond_update,
-    &rule_neural_cond_size,       &rule_neural_cond_save,
-    &rule_neural_cond_load,       &rule_neural_cond_json_export,
-    &rule_neural_cond_json_import
+    &rule_neural_cond_crossover,    &rule_neural_cond_general,
+    &rule_neural_cond_match,        &rule_neural_cond_mutate,
+    &rule_neural_cond_copy,         &rule_neural_cond_cover,
+    &rule_neural_cond_free,         &rule_neural_cond_init,
+    &rule_neural_conv_init,         &rule_neural_cond_print,
+    &rule_neural_cond_update,       &rule_neural_cond_size,
+    &rule_neural_cond_save,         &rule_neural_cond_load,
+    &rule_neural_cond_json_export,  &rule_neural_cond_json_import
 };
 
 bool

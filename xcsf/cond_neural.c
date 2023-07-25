@@ -46,6 +46,12 @@ cond_neural_init(const struct XCSF *xcsf, struct Cl *c)
     c->cond = new;
 }
 
+void
+cond_neural_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
+{
+    return;
+}
+
 /**
  * @brief Frees the memory used by a neural network condition.
  * @param [in] xcsf XCSF data structure.

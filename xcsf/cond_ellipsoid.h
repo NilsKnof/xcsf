@@ -65,6 +65,9 @@ void
 cond_ellipsoid_init(const struct XCSF *xcsf, struct Cl *c);
 
 void
+cond_ellipsoid_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp);
+
+void
 cond_ellipsoid_print(const struct XCSF *xcsf, const struct Cl *c);
 
 void
@@ -91,12 +94,12 @@ cond_ellipsoid_json_import(const struct XCSF *xcsf, struct Cl *c,
  * @brief Hyperellipsoid condition implemented functions.
  */
 static struct CondVtbl const cond_ellipsoid_vtbl = {
-    &cond_ellipsoid_crossover,  &cond_ellipsoid_general,
-    &cond_ellipsoid_match,      &cond_ellipsoid_mutate,
-    &cond_ellipsoid_copy,       &cond_ellipsoid_cover,
-    &cond_ellipsoid_free,       &cond_ellipsoid_init,
-    &cond_ellipsoid_print,      &cond_ellipsoid_update,
-    &cond_ellipsoid_size,       &cond_ellipsoid_save,
-    &cond_ellipsoid_load,       &cond_ellipsoid_json_export,
-    &cond_ellipsoid_json_import
+    &cond_ellipsoid_crossover,          &cond_ellipsoid_general,
+    &cond_ellipsoid_match,              &cond_ellipsoid_mutate,
+    &cond_ellipsoid_copy,               &cond_ellipsoid_cover,
+    &cond_ellipsoid_free,               &cond_ellipsoid_init,
+    &cond_ellipsoid_conv_init,          &cond_ellipsoid_print,
+    &cond_ellipsoid_update,             &cond_ellipsoid_size,
+    &cond_ellipsoid_save,               &cond_ellipsoid_load,
+    &cond_ellipsoid_json_export,        &cond_ellipsoid_json_import
 };

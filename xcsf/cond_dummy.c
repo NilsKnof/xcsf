@@ -36,6 +36,12 @@ cond_dummy_init(const struct XCSF *xcsf, struct Cl *c)
     (void) c;
 }
 
+void
+cond_dummy_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
+{
+    return;
+}
+
 /**
  * @brief Dummy free function.
  * @param [in] xcsf XCSF data structure.

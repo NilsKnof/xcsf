@@ -53,6 +53,9 @@ void
 cond_dummy_init(const struct XCSF *xcsf, struct Cl *c);
 
 void
+cond_dummy_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp);
+
+void
 cond_dummy_print(const struct XCSF *xcsf, const struct Cl *c);
 
 void
@@ -81,7 +84,8 @@ cond_dummy_json_import(const struct XCSF *xcsf, struct Cl *c,
 static struct CondVtbl const cond_dummy_vtbl = {
     &cond_dummy_crossover, &cond_dummy_general,     &cond_dummy_match,
     &cond_dummy_mutate,    &cond_dummy_copy,        &cond_dummy_cover,
-    &cond_dummy_free,      &cond_dummy_init,        &cond_dummy_print,
-    &cond_dummy_update,    &cond_dummy_size,        &cond_dummy_save,
-    &cond_dummy_load,      &cond_dummy_json_export, &cond_dummy_json_import
+    &cond_dummy_free,      &cond_dummy_init,        &cond_dummy_conv_init,
+    &cond_dummy_print,     &cond_dummy_update,      &cond_dummy_size,
+    &cond_dummy_save,      &cond_dummy_load,        &cond_dummy_json_export,
+    &cond_dummy_json_import
 };

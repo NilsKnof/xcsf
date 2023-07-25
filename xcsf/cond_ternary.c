@@ -73,6 +73,12 @@ cond_ternary_init(const struct XCSF *xcsf, struct Cl *c)
     cond_ternary_rand(xcsf, c);
 }
 
+void
+cond_ternary_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
+{
+    return;
+}
+
 /**
  * @brief Frees the memory used by a ternary condition.
  * @param [in] xcsf The XCSF data structure.

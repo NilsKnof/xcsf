@@ -39,6 +39,12 @@ cond_gp_init(const struct XCSF *xcsf, struct Cl *c)
     c->cond = new;
 }
 
+void
+cond_gp_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
+{
+    return;
+}
+
 /**
  * @brief Frees the memory used by a tree-GP condition.
  * @param [in] xcsf XCSF data structure.

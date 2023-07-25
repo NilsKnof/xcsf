@@ -66,6 +66,9 @@ void
 rule_dgp_cond_init(const struct XCSF *xcsf, struct Cl *c);
 
 void
+rule_dgb_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp);
+
+void
 rule_dgp_cond_print(const struct XCSF *xcsf, const struct Cl *c);
 
 void
@@ -92,14 +95,14 @@ rule_dgp_cond_json_import(const struct XCSF *xcsf, struct Cl *c,
  * @brief Dynamical GP rule condition implemented functions.
  */
 static struct CondVtbl const rule_dgp_cond_vtbl = {
-    &rule_dgp_cond_crossover,  &rule_dgp_cond_general,
-    &rule_dgp_cond_match,      &rule_dgp_cond_mutate,
-    &rule_dgp_cond_copy,       &rule_dgp_cond_cover,
-    &rule_dgp_cond_free,       &rule_dgp_cond_init,
-    &rule_dgp_cond_print,      &rule_dgp_cond_update,
-    &rule_dgp_cond_size,       &rule_dgp_cond_save,
-    &rule_dgp_cond_load,       &rule_dgp_cond_json_export,
-    &rule_dgp_cond_json_import
+    &rule_dgp_cond_crossover,   &rule_dgp_cond_general,
+    &rule_dgp_cond_match,       &rule_dgp_cond_mutate,
+    &rule_dgp_cond_copy,        &rule_dgp_cond_cover,
+    &rule_dgp_cond_free,        &rule_dgp_cond_init,
+    &rule_dgb_conv_init,        &rule_dgp_cond_print,
+    &rule_dgp_cond_update,      &rule_dgp_cond_size,
+    &rule_dgp_cond_save,        &rule_dgp_cond_load,
+    &rule_dgp_cond_json_export, &rule_dgp_cond_json_import
 };
 
 bool
