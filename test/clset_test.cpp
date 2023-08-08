@@ -24,6 +24,7 @@
 #include "../lib/doctest/doctest/doctest.h"
 
 extern "C" {
+#include "../xcsf/clset.h"
 #include "../xcsf/pa.h"
 #include "../xcsf/param.h"
 #include "../xcsf/utils.h"
@@ -35,56 +36,64 @@ extern "C" {
 #include <string.h>
 }
 
-const int n_samples = 5;
-const int x_dim = 4;
-const int y_dim = 1;
-
-double x[20] = { 0.7566081103, 0.3125093674, 0.3449376898, 0.3677518467,
-                 0.7276272381, 0.2457498699, 0.2704867908, 0.0000000000,
-                 0.8586376463, 0.2309959724, 0.5802303236, 0.9674486498,
-                 0.5587937197, 0.6346787906, 0.0464343089, 0.4214295062,
-                 0.7107445754, 0.7048862747, 0.1036188594, 0.4501471722 };
-
-double y[4] = { 0.1, 0.2, 0.3, 0.4 };
-
-double expected[5] = { 0.341521, 0.342378, 0.294014, 0.520393, 0.6206 };
-
 TEST_CASE("CLSET")
 {
     /* Test initialisation */
+    const int x_dim = 4;
+    const int y_dim = 1;
+
     struct XCSF xcsf;
     param_init(&xcsf, x_dim, y_dim, 1);
-    rand_init_seed(2);
+    param_set_random_state(&xcsf, 2);
     xcsf_init(&xcsf);
+    clset_pset_init(&xcsf);
 
-    /* Smoke test */
-    struct Input train_data;
-    train_data.n_samples = n_samples;
-    train_data.x_dim = x_dim;
-    train_data.y_dim = y_dim;
-    train_data.x = x;
-    train_data.y = y;
-    double *cover = (double *) calloc(y_dim, sizeof(double));
-    // fit() with only train data
-    xcs_supervised_fit(&xcsf, &train_data, NULL, true, 100);
-    // score()
-    double score = xcs_supervised_score(&xcsf, &train_data, cover);
-    CHECK_EQ(doctest::Approx(score), 0.129257);
-    score = xcs_supervised_score_n(&xcsf, &train_data, 10, cover);
-    CHECK_EQ(doctest::Approx(score), 0.129257);
-    score = xcs_supervised_score_n(&xcsf, &train_data, 2, cover);
-    CHECK_EQ(doctest::Approx(score), 0.00598594);
-    // predict()
-    double *output =
-        (double *) malloc(sizeof(double) * n_samples * xcsf.pa_size);
-    xcs_supervised_predict(&xcsf, x, output, n_samples, cover);
-    for (int i = 0; i < n_samples; i++) {
-        CHECK_EQ(doctest::Approx(output[i]), expected[i]);
+    /* Test insert */
+    // insert a classifier
+    cJSON *json = cJSON_CreateObject();
+    cJSON_AddNumberToObject(json, "error", 0.1);
+    cJSON_AddNumberToObject(json, "fitness", 0.2);
+    cJSON_AddNumberToObject(json, "set_size", 10);
+    cJSON_AddNumberToObject(json, "numerosity", 20);
+    cJSON_AddNumberToObject(json, "experience", 50);
+    cJSON_AddNumberToObject(json, "time", 100);
+    cJSON_AddNumberToObject(json, "samples_seen", 100);
+    cJSON_AddNumberToObject(json, "samples_matched", 50);
+    cJSON_AddBoolToObject(json, "current_match", true);
+    cJSON_AddNumberToObject(json, "current_action", 1);
+    double pred[1] = { 0.6 };
+    cJSON *p = cJSON_CreateDoubleArray(pred, xcsf.y_dim);
+    cJSON_AddItemToObject(json, "current_prediction", p);
+    clset_json_insert_cl(&xcsf, json);
+    cJSON_Delete(json);
+    // check the classifier
+    struct Cl *c = xcsf.pset.list->cl;
+    CHECK_EQ(c->err, 0.1);
+    CHECK_EQ(c->fit, 0.2);
+    CHECK_EQ(c->size, 10);
+    CHECK_EQ(c->num, 20);
+    CHECK_EQ(c->exp, 50);
+    CHECK_EQ(c->time, 100);
+    CHECK_EQ(c->age, 100);
+    CHECK_EQ(c->mtotal, 50);
+    CHECK(c->m);
+    CHECK_EQ(c->action, 1);
+    for (int i = 0; i < y_dim; ++i) {
+        CHECK_EQ(pred[i], c->prediction[i]);
     }
-    // fit() with train and test data
-    xcs_supervised_fit(&xcsf, &train_data, &train_data, true, 100);
-    score = xcs_supervised_score(&xcsf, &train_data, cover);
-    CHECK_EQ(doctest::Approx(score), 0.0306502);
+
+    /* Test mean size calculations */
+    const double csize = clset_mean_cond_size(&xcsf, &xcsf.pset);
+    CHECK_EQ(csize, x_dim);
+    const double psize = clset_mean_pred_size(&xcsf, &xcsf.pset);
+    CHECK_EQ(psize, x_dim + 1);
+
+    /* Smoke test export */
+    char *json_str = clset_json_export(&xcsf, &xcsf.pset, true, true, true);
+    CHECK(json_str != NULL);
+
+    /* Smoke test import */
+    clset_json_insert(&xcsf, json_str);
 
     /* Test clean up */
     xcsf_free(&xcsf);

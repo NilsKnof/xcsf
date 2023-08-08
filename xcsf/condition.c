@@ -46,6 +46,8 @@ condition_set(const struct XCSF *xcsf, struct Cl *c)
             break;
         case COND_TYPE_HYPERRECTANGLE_CSR:
         case COND_TYPE_HYPERRECTANGLE_UBR:
+        case COND_TYPE_HYPERRECTANGLE_MPR:
+        case COND_TYPE_HYPERRECTANGLE_MMR:
             c->cond_vptr = &cond_rectangle_vtbl;
             break;
         case COND_TYPE_HYPERELLIPSOID:
@@ -92,6 +94,10 @@ condition_type_as_string(const int type)
             return COND_STRING_HYPERRECTANGLE_CSR;
         case COND_TYPE_HYPERRECTANGLE_UBR:
             return COND_STRING_HYPERRECTANGLE_UBR;
+        case COND_TYPE_HYPERRECTANGLE_MMR:
+            return COND_STRING_HYPERRECTANGLE_MMR;
+        case COND_TYPE_HYPERRECTANGLE_MPR:
+            return COND_STRING_HYPERRECTANGLE_MPR;
         case COND_TYPE_HYPERELLIPSOID:
             return COND_STRING_HYPERELLIPSOID;
         case COND_TYPE_NEURAL:
@@ -130,6 +136,12 @@ condition_type_as_int(const char *type)
     }
     if (strncmp(type, COND_STRING_HYPERRECTANGLE_UBR, 19) == 0) {
         return COND_TYPE_HYPERRECTANGLE_UBR;
+    }
+    if (strncmp(type, COND_STRING_HYPERRECTANGLE_MMR, 19) == 0) {
+        return COND_TYPE_HYPERRECTANGLE_MMR;
+    }
+    if (strncmp(type, COND_STRING_HYPERRECTANGLE_MPR, 19) == 0) {
+        return COND_TYPE_HYPERRECTANGLE_MPR;
     }
     if (strncmp(type, COND_STRING_HYPERELLIPSOID, 15) == 0) {
         return COND_TYPE_HYPERELLIPSOID;
@@ -242,6 +254,8 @@ cond_param_json_export(const struct XCSF *xcsf)
         case COND_TYPE_HYPERELLIPSOID:
         case COND_TYPE_HYPERRECTANGLE_CSR:
         case COND_TYPE_HYPERRECTANGLE_UBR:
+        case COND_TYPE_HYPERRECTANGLE_MMR:
+        case COND_TYPE_HYPERRECTANGLE_MPR:
             json_str = cond_param_json_export_csr(xcsf);
             break;
         case COND_TYPE_GP:
@@ -288,6 +302,8 @@ cond_param_json_import(struct XCSF *xcsf, cJSON *json)
         case COND_TYPE_HYPERELLIPSOID:
         case COND_TYPE_HYPERRECTANGLE_CSR:
         case COND_TYPE_HYPERRECTANGLE_UBR:
+        case COND_TYPE_HYPERRECTANGLE_MMR:
+        case COND_TYPE_HYPERRECTANGLE_MPR:
             ret = cond_param_json_import_csr(xcsf, json->child);
             break;
         case COND_TYPE_GP:

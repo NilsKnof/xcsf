@@ -107,7 +107,8 @@ cond_neural_json_import(const struct XCSF *xcsf, struct Cl *c,
 static struct CondVtbl const cond_neural_vtbl = {
     &cond_neural_crossover, &cond_neural_general,     &cond_neural_match,
     &cond_neural_mutate,    &cond_neural_copy,        &cond_neural_cover,
-    &cond_neural_free,      &cond_neural_init,        &cond_neural_print,
-    &cond_neural_update,    &cond_neural_size,        &cond_neural_save,
-    &cond_neural_load,      &cond_neural_json_export, &cond_neural_json_import
+    &cond_neural_free,      &cond_neural_init,
+    &cond_neural_print,     &cond_neural_update,      &cond_neural_size,
+    &cond_neural_save,      &cond_neural_load,        &cond_neural_json_export,
+    &cond_neural_json_import
 };
