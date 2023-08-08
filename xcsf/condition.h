@@ -119,7 +119,6 @@ struct CondVtbl {
                             const double *x);
     void (*cond_impl_free)(const struct XCSF *xcsf, const struct Cl *c);
     void (*cond_impl_init)(const struct XCSF *xcsf, struct Cl *c);
-    void (*cond_impl_conv_init)(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp);
     void (*cond_impl_print)(const struct XCSF *xcsf, const struct Cl *c);
     void (*cond_impl_update)(const struct XCSF *xcsf, const struct Cl *c,
                              const double *x, const double *y);
@@ -283,17 +282,6 @@ cond_init(const struct XCSF *xcsf, struct Cl *c)
 }
 
 /**
- * @brief Converts an UBR condition to a new hyperrectangle condition.
- * @param [in] xcsf The XCSF data structure.
- * @param [in] c The classifier whose condition is to be initialised.
- */
-static inline void
-cond_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
-{
-    (*c->cond_vptr->cond_impl_conv_init)(xcsf, c, temp);
-}
-
-/**
  * @brief Prints the classifier condition.
  * @param [in] xcsf The XCSF data structure.
  * @param [in] c The classifier whose condition is to be printed.
@@ -331,7 +319,9 @@ cond_json_import(const struct XCSF *xcsf, struct Cl *c, const cJSON *json)
         exit(EXIT_FAILURE);
     }
     const char *type = item->valuestring;
-    if (condition_type_as_int(type) != xcsf->cond->type) {
+
+    if (condition_type_as_int(type) != xcsf->cond->type &&
+        condition_type_as_int(type) != COND_TYPE_HYPERRECTANGLE_UBR) {
         printf("cond_json_import(): mismatched type\n");
         printf("XCSF type = %s, but imported type = %s\n",
                condition_type_as_string(xcsf->cond->type), type);

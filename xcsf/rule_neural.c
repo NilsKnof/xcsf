@@ -47,12 +47,6 @@ rule_neural_cond_init(const struct XCSF *xcsf, struct Cl *c)
 }
 
 void
-rule_neural_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
-{
-    fprintf(stderr, "Error: method not implemented\n");
-}
-
-void
 rule_neural_cond_free(const struct XCSF *xcsf, const struct Cl *c)
 {
     (void) xcsf;

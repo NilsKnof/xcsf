@@ -75,9 +75,6 @@ void
 cond_ternary_init(const struct XCSF *xcsf, struct Cl *c);
 
 void
-cond_ternary_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp);
-
-void
 cond_ternary_print(const struct XCSF *xcsf, const struct Cl *c);
 
 void
@@ -108,7 +105,7 @@ static struct CondVtbl const cond_ternary_vtbl = {
     &cond_ternary_match,            &cond_ternary_mutate,
     &cond_ternary_copy,             &cond_ternary_cover,
     &cond_ternary_free,             &cond_ternary_init,
-    &cond_ternary_conv_init,        &cond_ternary_print,
+    &cond_ternary_print,
     &cond_ternary_update,           &cond_ternary_size,
     &cond_ternary_save,             &cond_ternary_load,
     &cond_ternary_json_export,      &cond_ternary_json_import

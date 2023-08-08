@@ -103,13 +103,12 @@ cond_rectangle_init(const struct XCSF *xcsf, struct Cl *c)
 /**
  * @brief Converts an UBR condition to a new hyperrectangle condition.
  * @param [in] xcsf XCSF data structure.
- * @param [in] c Classifier whose condition is to be initialised.
- * @param [in] UBR Classifier whose condition is to be converted.
+ * @param [in] c Classifier whose condition is to be converted.
  */
-void cond_rectangle_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
+void cond_rectangle_convert(const struct XCSF *xcsf, struct Cl *c)
 {
     struct CondRectangle *new = malloc(sizeof(struct CondRectangle));
-    const struct CondRectangle *temp_cond = temp->cond;
+    const struct CondRectangle *temp_cond = c->cond;
     new->b1 = malloc(sizeof(double) * xcsf->x_dim);
     new->b2 = malloc(sizeof(double) * xcsf->x_dim);
     double b1 = 0, b2 = 0;
@@ -527,11 +526,20 @@ cond_rectangle_json_export(const struct XCSF *xcsf, const struct Cl *c)
         cJSON_AddStringToObject(json, "type", "hyperrectangle_csr");
         cJSON_AddItemToObject(json, "center", b1);
         cJSON_AddItemToObject(json, "spread", b2);
-    } else {
+    } else if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_UBR){
         cJSON_AddStringToObject(json, "type", "hyperrectangle_ubr");
         cJSON_AddItemToObject(json, "bound1", b1);
         cJSON_AddItemToObject(json, "bound2", b2);
+    } else if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MMR) {
+        cJSON_AddStringToObject(json, "type", "hyperrectangle_mmr");
+        cJSON_AddItemToObject(json, "lower", b1);
+        cJSON_AddItemToObject(json, "upper", b2);
+    } else if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MPR) {
+        cJSON_AddStringToObject(json, "type", "hyperrectangle_mpr");
+        cJSON_AddItemToObject(json, "lower", b1);
+        cJSON_AddItemToObject(json, "proportion", b2);
     }
+
     cJSON_AddItemToObject(json, "mutation", mutation);
     char *string = cJSON_Print(json);
     cJSON_Delete(json);
@@ -549,13 +557,27 @@ cond_rectangle_json_import(const struct XCSF *xcsf, struct Cl *c,
                            const cJSON *json)
 {
     struct CondRectangle *cond = c->cond;
-    bool csr = false;
-    if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_CSR) {
-        csr = true;
+    char *b1_name = "";
+    char *b2_name = "";
+    const cJSON *item = cJSON_GetObjectItem(json, "type");
+    const char *type = item->valuestring;
+
+    if (condition_type_as_int(type) == COND_TYPE_HYPERRECTANGLE_CSR) {
+        b1_name = "center";
+        b2_name = "spread";
+    } else if (condition_type_as_int(type) == COND_TYPE_HYPERRECTANGLE_UBR) {
+        b1_name = "bound1";
+        b2_name = "bound2";
+    } else if (condition_type_as_int(type) == COND_TYPE_HYPERRECTANGLE_MMR) {
+        b1_name = "lower";
+        b2_name = "upper";
+    } else if (condition_type_as_int(type) == COND_TYPE_HYPERRECTANGLE_MPR) {
+        b1_name = "lower";
+        b2_name = "proportion";
+    } else {
+        printf("Import error: condition not found\n");
     }
-    const char *b1_name = csr ? "center" : "bound1";
-    const char *b2_name = csr ? "spread" : "bound2";
-    const cJSON *item = cJSON_GetObjectItem(json, b1_name);
+    item = cJSON_GetObjectItem(json, b1_name);
     if (item != NULL && cJSON_IsArray(item)) {
         if (cJSON_GetArraySize(item) == xcsf->x_dim) {
             for (int i = 0; i < xcsf->x_dim; ++i) {
@@ -579,5 +601,11 @@ cond_rectangle_json_import(const struct XCSF *xcsf, struct Cl *c,
             exit(EXIT_FAILURE);
         }
     }
+
+    if (condition_type_as_int(type) != xcsf->cond->type &&
+        condition_type_as_int(type) == COND_TYPE_HYPERRECTANGLE_UBR) {
+        cond_rectangle_convert(xcsf, c);
+    }
+
     sam_json_import(cond->mu, N_MU, json);
 }

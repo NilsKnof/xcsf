@@ -65,7 +65,7 @@ void
 cond_rectangle_init(const struct XCSF *xcsf, struct Cl *c);
 
 void
-cond_rectangle_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp);
+cond_rectangle_convert(const struct XCSF *xcsf, struct Cl *c);
 
 void
 cond_rectangle_print(const struct XCSF *xcsf, const struct Cl *c);
@@ -98,7 +98,7 @@ static struct CondVtbl const cond_rectangle_vtbl = {
     &cond_rectangle_match,              &cond_rectangle_mutate,
     &cond_rectangle_copy,               &cond_rectangle_cover,
     &cond_rectangle_free,               &cond_rectangle_init,
-    &cond_rectangle_conv_init,          &cond_rectangle_print,
+    &cond_rectangle_print,
     &cond_rectangle_update,             &cond_rectangle_size,
     &cond_rectangle_save,               &cond_rectangle_load,
     &cond_rectangle_json_export,        &cond_rectangle_json_import

@@ -36,12 +36,6 @@ cond_dummy_init(const struct XCSF *xcsf, struct Cl *c)
     (void) c;
 }
 
-void
-cond_dummy_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
-{
-    fprintf(stderr, "Error: method not implemented\n");
-}
-
 /**
  * @brief Dummy free function.
  * @param [in] xcsf XCSF data structure.

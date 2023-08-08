@@ -37,12 +37,6 @@ rule_dgp_cond_init(const struct XCSF *xcsf, struct Cl *c)
 }
 
 void
-rule_dgb_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
-{
-    fprintf(stderr, "Error: method not implemented\n");
-}
-
-void
 rule_dgp_cond_free(const struct XCSF *xcsf, const struct Cl *c)
 {
     (void) xcsf;

@@ -70,10 +70,6 @@ void
 cond_gp_init(const struct XCSF *xcsf, struct Cl *c);
 
 void
-cond_gp_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp);
-
-
-void
 cond_gp_print(const struct XCSF *xcsf, const struct Cl *c);
 
 void
@@ -101,7 +97,7 @@ cond_gp_json_import(const struct XCSF *xcsf, struct Cl *c, const cJSON *json);
 static struct CondVtbl const cond_gp_vtbl = {
     &cond_gp_crossover, &cond_gp_general,     &cond_gp_match,
     &cond_gp_mutate,    &cond_gp_copy,        &cond_gp_cover,
-    &cond_gp_free,      &cond_gp_init,        &cond_gp_conv_init,
+    &cond_gp_free,      &cond_gp_init,
     &cond_gp_print,     &cond_gp_update,      &cond_gp_size,
     &cond_gp_save,      &cond_gp_load,        &cond_gp_json_export,
     &cond_gp_json_import
