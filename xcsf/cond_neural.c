@@ -49,7 +49,7 @@ cond_neural_init(const struct XCSF *xcsf, struct Cl *c)
 void
 cond_neural_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
 {
-    throw "not implemented";
+    fprintf(stderr, "Error: method not implemented\n");
 }
 
 /**
