@@ -76,7 +76,7 @@ cond_ternary_init(const struct XCSF *xcsf, struct Cl *c)
 void
 cond_ternary_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
 {
-    return;
+    throw "not implemented";
 }
 
 /**

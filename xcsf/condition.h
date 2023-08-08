@@ -29,8 +29,8 @@
 #define COND_TYPE_DUMMY (0) //!< Condition type dummy
 #define COND_TYPE_HYPERRECTANGLE_CSR (1) //!< Condition type CSR hyperrectangle
 #define COND_TYPE_HYPERRECTANGLE_UBR (2) //!< Condition type UBR hyperrectangle
-#define COND_TYPE_HYPERRECTANGLE_MPR (14) //!< Condition type UBR hyperrectangle
-#define COND_TYPE_HYPERRECTANGLE_MMR (15) //!< Condition type UBR hyperrectangle
+#define COND_TYPE_HYPERRECTANGLE_MPR (14) //!< Condition type MPR hyperrectangle
+#define COND_TYPE_HYPERRECTANGLE_MMR (15) //!< Condition type MMR hyperrectangle
 #define COND_TYPE_HYPERELLIPSOID (3) //!< Condition type hyperellipsoid
 #define COND_TYPE_NEURAL (4) //!< Condition type neural network
 #define COND_TYPE_GP (5) //!< Condition type tree GP
@@ -43,8 +43,8 @@
 #define COND_STRING_DUMMY ("dummy\0") //!< Dummy
 #define COND_STRING_HYPERRECTANGLE_CSR ("hyperrectangle_csr\0") //!< CSR
 #define COND_STRING_HYPERRECTANGLE_UBR ("hyperrectangle_ubr\0") //!< UBR
-#define COND_STRING_HYPERRECTANGLE_MPR ("hyperrectangle_mpr\0") //!< UBR
-#define COND_STRING_HYPERRECTANGLE_MMR ("hyperrectangle_mmr\0") //!< UBR
+#define COND_STRING_HYPERRECTANGLE_MPR ("hyperrectangle_mpr\0") //!< MPR
+#define COND_STRING_HYPERRECTANGLE_MMR ("hyperrectangle_mmr\0") //!< MMR
 #define COND_STRING_HYPERELLIPSOID ("hyperellipsoid\0") //!< Hyperellipsoid
 #define COND_STRING_NEURAL ("neural\0") //!< Neural
 #define COND_STRING_GP ("tree_gp\0") //!< Tree GP

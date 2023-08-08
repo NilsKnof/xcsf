@@ -39,7 +39,7 @@ rule_dgp_cond_init(const struct XCSF *xcsf, struct Cl *c)
 void
 rule_dgb_conv_init(const struct XCSF *xcsf, struct Cl *c, struct Cl *temp)
 {
-    return;
+    throw "not implemented";
 }
 
 void

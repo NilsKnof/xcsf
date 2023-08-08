@@ -1,4 +1,4 @@
-/*
+ /*
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -81,6 +81,7 @@ cond_rectangle_init(const struct XCSF *xcsf, struct Cl *c)
         }
     } else if (xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MMR || xcsf->cond->type == COND_TYPE_HYPERRECTANGLE_MPR) {
         // MMR/OBR: b1 = lower, b2 = upper
+        // TODO: differnt distribution than ubr
         for (int i = 0; i < xcsf->x_dim; ++i) {
             if (new->b1[i] > new->b2[i]) {
                 temp = new->b2[i];
