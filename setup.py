@@ -83,7 +83,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="xcsf",
-    version="1.3.0",
+    version="1.3.1",
     license="GPL-3.0",
     maintainer="Richard Preen",
     maintainer_email="rpreen@gmail.com",
@@ -92,7 +92,6 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/rpreen/xcsf",
     packages=find_packages(),
-    package_data={"xcsf": ["__init__.pyi"]},
     ext_modules=[CMakeExtension("xcsf/xcsf")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
